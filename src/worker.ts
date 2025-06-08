@@ -3,7 +3,7 @@ import * as activities from './activities';
 
 async function run() {
   const connection = await NativeConnection.connect({
-    address: 'localhost:7233',
+    address: process.env.TEMPORAL_ADDRESS,
     // TLS and gRPC metadata configuration goes here.
   });
   try {
