@@ -1,5 +1,9 @@
 # Freight Delay Notification
 
+<p align="center">
+  <img src="logo.png" width="100" style="border-radius: 15px;">
+</p>
+
 This project demonstrates a freight delay notification system using Temporal.
 
 ### Running locally
@@ -35,3 +39,7 @@ sequenceDiagram
     Workflow-->>Client: Workflow completed
 ```
 > Failures from Open AI API is handled gracefully.
+
+## License
+
+This project is licensed under the MIT License.
