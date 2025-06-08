@@ -13,7 +13,7 @@ const EMAIL_SERVICE_URL = 'https://api.resend.com/emails';
  */
 export async function sendEmail(recipientEmail: string, message: string, destinationAddress: string): Promise<{ messageId: string; }> {
 
-  const apiKey = process.env.EMAIL_SERVICE_API_URL;
+  const apiKey = process.env.EMAIL_SERVICE_API_KEY;
   const deliveryUpdateEmail = process.env.DELIVERY_UPDATE_EMAIL;
 
   if (!apiKey || !deliveryUpdateEmail) {
