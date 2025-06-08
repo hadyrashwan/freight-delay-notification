@@ -8,6 +8,9 @@ interface ResendSuccessResponse {
 
 const EMAIL_SERVICE_URL = 'https://api.resend.com/emails';
 
+/**
+ * Sends a delivery delay notification email to a customer using Resend's email API.
+ */
 export async function sendEmail(recipientEmail: string, message: string, destinationAddress: string): Promise<{ messageId: string; }> {
 
   const apiKey = process.env.EMAIL_SERVICE_API_URL;

@@ -20,6 +20,12 @@ export interface OpenAiApiResponse {
   choices: OpenAiChoice[];
 }
 
+/**
+ * Generates a default delivery delay message without using an LLM.
+ *
+ * This is a fallback method used when the call to the LLM fails or is unavailable.
+ *
+ */
 export async function getDefaultMessage(delayInSeconds: number, originAddress: string, destinationAddress: string): Promise<{ message: string; }> {
 
   const delayInMinutes = Math.round(delayInSeconds / 60);
@@ -28,6 +34,9 @@ export async function getDefaultMessage(delayInSeconds: number, originAddress: s
   return { message };
 }
 
+/**
+ * Uses OpenAI's GPT model to generate a friendly delivery delay message.
+ */
 export async function getMessage(delayInSeconds: number, originAddress: string, destinationAddress: string): Promise<{ message: string; }> {
 
   const apiKey = process.env.LLM_API_KEY;

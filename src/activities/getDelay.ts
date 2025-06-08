@@ -9,7 +9,14 @@ type GoogleRoutesResponse = {
   }[];
 };
 
-
+/**
+ * Retrieves the traffic delay in seconds between the origin and destination addresses.
+ *
+ * This function integrates with the Google Routes API to determine traffic-aware travel time.
+ * It subtracts the static (no-traffic) travel duration from the traffic-aware duration to compute
+ * the estimated traffic delay. It also supports optional waypoints and a custom departure time.
+ *
+ */
 export async function getDelay(originAddress: string, destinationAddress: string, options?: {
   waypoints?: string[];
   departureTimeISO?: string;
