@@ -72,7 +72,7 @@ export async function delayNotification(
  * about the traffic delay. If the LLM call fails,
  * it gracefully falls back to a predefined default message template.
  */
-async function handleMessageGeneration(
+export async function handleMessageGeneration(
   trafficDelayInSeconds: number,
   originAddress: string,
   destinationAddress: string,
