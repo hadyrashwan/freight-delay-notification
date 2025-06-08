@@ -1,32 +1,24 @@
 import { Connection, Client } from '@temporalio/client';
-import { example } from './workflows';
+import { delayNotification } from './workflows';
 import { nanoid } from 'nanoid';
 
 async function run() {
   // Connect to the default Server location
   const connection = await Connection.connect({ address: 'localhost:7233' });
-  // In production, pass options to configure TLS and other settings:
-  // {
-  //   address: 'foo.bar.tmprl.cloud',
-  //   tls: {}
-  // }
-
   const client = new Client({
     connection,
-    // namespace: 'foo.bar', // connects to 'default' namespace if not specified
   });
 
-  const handle = await client.workflow.start(example, {
-    taskQueue: 'hello-world',
+  const handle = await client.workflow.start(delayNotification, {
+    taskQueue: 'delivery-delay',
     // type inference works! args: [name: string]
-    args: ['Temporal'],
+    args: ['h2rashwan@gmail.com','R. Manuel Pinto de Azevedo 617, 4149-010 Porto','Restaurante Toca do Julio Estrada do Rodizio, R. de Santo André 12, 2705-335 Colares',10,['Avenida Infante Dom Henrique, AAFC, 1900-320 Lisboa'],'2025-06-19T23:00:00.000Z'],
     // in practice, use a meaningful business ID, like customerId or transactionId
     workflowId: 'workflow-' + nanoid(),
   });
   console.log(`Started workflow ${handle.workflowId}`);
 
-  // optional: wait for client result
-  console.log(await handle.result()); // Hello, Temporal!
+  console.log(await handle.result());
 }
 
 run().catch((err) => {
