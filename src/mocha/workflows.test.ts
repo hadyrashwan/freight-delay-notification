@@ -1,11 +1,11 @@
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { before, describe, it } from 'mocha';
 import { Worker } from '@temporalio/worker';
-import { example } from '../workflows';
 import * as activities from '../activities';
+import { delayNotification } from '../workflows';
 import assert from 'assert';
 
-describe('Example workflow', () => {
+describe('delayNotification workflow', () => {
   let testEnv: TestWorkflowEnvironment;
 
   before(async () => {
@@ -16,7 +16,7 @@ describe('Example workflow', () => {
     await testEnv?.teardown();
   });
 
-  it('successfully completes the Workflow', async () => {
+  it('successfully completes the delayNotification Workflow', async () => {
     const { client, nativeConnection } = testEnv;
     const taskQueue = 'test';
 
@@ -28,12 +28,16 @@ describe('Example workflow', () => {
     });
 
     const result = await worker.runUntil(
-      client.workflow.execute(example, {
-        args: ['Temporal'],
-        workflowId: 'test',
+      client.workflow.execute(delayNotification, {
+        args: ['test@example.com', 'Origin', 'Destination', 300],
+        workflowId: 'delay-notification-test',
         taskQueue,
       }),
     );
-    assert.equal(result, 'Hello, Temporal!');
+    assert.equal(typeof result, 'object');
+    assert.equal(result.isDelayed, true);
+    assert.equal(typeof result.messageId, 'string');
+    assert.equal(typeof result.message, 'string');
+    assert.equal(typeof result.trafficDelayInSeconds, 'number');
   });
 });
