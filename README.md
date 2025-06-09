@@ -1,8 +1,8 @@
-# Freight Delay Notification
-
 <p align="center">
-  <img src="logo.png" width="100" style="border-radius: 15px;">
+  <img src="logo.png" width="150" style="border-radius: 15px;">
 </p>
+
+# Freight Delay Notification
 
 This project demonstrates a freight delay notification system using Temporal.
 

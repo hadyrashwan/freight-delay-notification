@@ -6,6 +6,15 @@ import { setupMocks } from './mocks';
 
 describe('getMessage Activity', () => {
   setupMocks();
+  let originalApiKey: string | undefined;
+
+  beforeEach(() => {
+    originalApiKey = process.env.LLM_API_KEY;
+  });
+
+  afterEach(() => {
+    process.env.LLM_API_KEY = originalApiKey;
+  });
 
   it('returns an object with message on success', async () => {
     process.env.LLM_API_KEY = 'test-key';
@@ -13,7 +22,6 @@ describe('getMessage Activity', () => {
     const result = (await env.run(activities.getMessage, 100, 'origin', 'destination')) as { message: string };
     assert.equal(typeof result, 'object');
     assert.equal(result.message, 'This is a mocked AI message from Titan Freight Co.');
-    delete process.env.LLM_API_KEY;
   });
 
   it('throws an error on fetch failure', async () => {
@@ -29,12 +37,10 @@ describe('getMessage Activity', () => {
         return true;
       }
     );
-    delete process.env.LLM_API_KEY;
   });
 
   it('throws an error if LLM_API_KEY is not set', async () => {
     const env = new MockActivityEnvironment();
-    const originalApiKey = process.env.LLM_API_KEY;
     delete process.env.LLM_API_KEY;
 
     await assert.rejects(
@@ -46,7 +52,5 @@ describe('getMessage Activity', () => {
         return true;
       }
     );
-
-    process.env.LLM_API_KEY = originalApiKey;
   });
 });

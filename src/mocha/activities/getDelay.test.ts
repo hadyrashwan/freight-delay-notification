@@ -6,18 +6,25 @@ import { setupMocks } from './mocks';
 
 describe('getDelay Activity', () => {
   setupMocks();
+  let originalApiKey: string | undefined;
+
+  beforeEach(() => {
+    originalApiKey = process.env.TRAFFIC_API_KEY;
+    process.env.TRAFFIC_API_KEY = 'test-key';
+  });
+
+  afterEach(() => {
+    process.env.TRAFFIC_API_KEY = originalApiKey;
+  });
 
   it('returns an object with trafficDelayInSeconds on success', async () => {
-    process.env.TRAFFIC_API_KEY = 'test-key';
     const env = new MockActivityEnvironment();
     const result = (await env.run(activities.getDelay, 'origin', 'destination')) as { trafficDelayInSeconds: number };
     assert.equal(typeof result, 'object');
     assert.equal(result.trafficDelayInSeconds, 300);
-    delete process.env.TRAFFIC_API_KEY;
   });
 
   it('throws an error on fetch failure', async () => {
-    process.env.TRAFFIC_API_KEY = 'test-key';
     const env = new MockActivityEnvironment();
     await assert.rejects(
       async () => {
@@ -29,12 +36,10 @@ describe('getDelay Activity', () => {
         return true;
       }
     );
-    delete process.env.TRAFFIC_API_KEY;
   });
 
   it('throws an error if TRAFFIC_API_KEY is not set', async () => {
     const env = new MockActivityEnvironment();
-    const originalApiKey = process.env.TRAFFIC_API_KEY;
     delete process.env.TRAFFIC_API_KEY;
 
     await assert.rejects(
@@ -46,7 +51,15 @@ describe('getDelay Activity', () => {
         return true;
       }
     );
+  });
 
-    process.env.TRAFFIC_API_KEY = originalApiKey;
+  it('returns an object with trafficDelayInSeconds on success with options', async () => {
+    const env = new MockActivityEnvironment();
+    const result = (await env.run(activities.getDelay, 'origin', 'destination', {
+      waypoints: ['waypoint'],
+      departureTimeISO: '2023-01-01T00:00:00Z',
+    })) as { trafficDelayInSeconds: number };
+    assert.equal(typeof result, 'object');
+    assert.equal(result.trafficDelayInSeconds, 300);
   });
 });

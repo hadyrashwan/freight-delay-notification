@@ -6,16 +6,28 @@ import { setupMocks } from './mocks';
 
 describe('sendEmail Activity', () => {
   setupMocks();
+  let originalApiKey: string | undefined;
+  let originalUpdateEmail: string | undefined;
+
+  beforeEach(() => {
+    originalApiKey = process.env.EMAIL_SERVICE_API_KEY;
+    originalUpdateEmail = process.env.DELIVERY_UPDATE_EMAIL;
+  });
+
+  afterEach(() => {
+    process.env.EMAIL_SERVICE_API_KEY = originalApiKey;
+    process.env.DELIVERY_UPDATE_EMAIL = originalUpdateEmail;
+  });
 
   it('returns an object with messageId on success', async () => {
     process.env.EMAIL_SERVICE_API_KEY = 'test-key';
     process.env.DELIVERY_UPDATE_EMAIL = 'test@example.com';
     const env = new MockActivityEnvironment();
-    const result = (await env.run(activities.sendEmail, 'test@example.com', 'Test Subject', 'Test Body')) as { messageId: string };
+    const result = (await env.run(activities.sendEmail, 'test@example.com', 'Test Subject', 'Test Body')) as {
+      messageId: string;
+    };
     assert.equal(typeof result, 'object');
     assert.equal(result.messageId, 'mocked_message_id');
-    delete process.env.EMAIL_SERVICE_API_KEY;
-    delete process.env.DELIVERY_UPDATE_EMAIL;
   });
 
   it('throws an error on fetch failure', async () => {
@@ -32,15 +44,10 @@ describe('sendEmail Activity', () => {
         return true;
       }
     );
-    delete process.env.EMAIL_SERVICE_API_KEY;
-    delete process.env.DELIVERY_UPDATE_EMAIL;
   });
 
   it('throws an error if email environment variables are not set', async () => {
     const env = new MockActivityEnvironment();
-    const originalApiUrl = process.env.EMAIL_SERVICE_API_KEY;
-    const originalUpdateEmail = process.env.DELIVERY_UPDATE_EMAIL;
-
     delete process.env.EMAIL_SERVICE_API_KEY;
     delete process.env.DELIVERY_UPDATE_EMAIL;
 
@@ -53,8 +60,5 @@ describe('sendEmail Activity', () => {
         return true;
       }
     );
-
-    process.env.EMAIL_SERVICE_API_KEY = originalApiUrl;
-    process.env.DELIVERY_UPDATE_EMAIL = originalUpdateEmail;
   });
 });
