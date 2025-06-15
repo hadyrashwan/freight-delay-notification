@@ -45,7 +45,6 @@ sequenceDiagram
     SendEmailActivity-->>Workflow: Email sent confirmation
     Workflow-->>Client: Workflow completed
 ```
-> Failures from Open AI API, Google Maps API and Resend API is handled gracefully.
 
 ## License
 
