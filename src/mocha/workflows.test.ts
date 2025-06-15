@@ -29,6 +29,7 @@ describe('delayNotification workflow', () => {
         sendEmail: async () => ({ messageId: 'test-message-id' }),
         getMessage: async () => ({ message: 'test message' }),
         getDefaultMessage: async () => ({ message: 'default message' }),
+        validateEnv: async () => true,
       },
     });
 

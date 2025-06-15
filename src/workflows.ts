@@ -12,6 +12,13 @@ const { getDelay } = proxyActivities<typeof activities>({
   },
 });
 
+const { validateEnv } = proxyActivities<typeof activities>({
+  startToCloseTimeout: ACTIVITY_TIMEOUT,
+  retry: {
+    maximumAttempts: MAX_ATTEMPTS,
+  },
+});
+
 const { getDefaultMessage } = proxyActivities<typeof activities>({
   startToCloseTimeout: ACTIVITY_TIMEOUT,
 });
@@ -47,6 +54,7 @@ export async function delayNotification(
   waypoints?: string[],
   departureTimeISO?: string,
 ) {
+  await validateEnv();
   const { trafficDelayInSeconds } = await getDelay(originAddress, destinationAddress, { waypoints, departureTimeISO });
   const isDelayed = trafficDelayInSeconds >= delayThresholdInSeconds;
 
