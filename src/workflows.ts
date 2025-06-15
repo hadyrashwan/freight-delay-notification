@@ -1,5 +1,8 @@
-import { proxyActivities } from '@temporalio/workflow';
+import { proxyActivities, defineSignal, setHandler, condition, log, uuid4 } from '@temporalio/workflow';
 import type * as activities from './activities';
+
+export const manualDelayOverrideSignal = defineSignal<[number]>('manualDelayOverride');
+export const manualConfirmationSignal = defineSignal<[]>('manualConfirmation');
 
 // Can be added to environment variables for more control
 const MAX_ATTEMPTS = 5
@@ -55,7 +58,8 @@ export async function delayNotification(
   departureTimeISO?: string,
 ) {
   await validateEnv();
-  const { trafficDelayInSeconds } = await getDelay(originAddress, destinationAddress, { waypoints, departureTimeISO });
+
+  const { trafficDelayInSeconds } = await handleGetDelay(originAddress, destinationAddress, { waypoints, departureTimeISO });
   const isDelayed = trafficDelayInSeconds >= delayThresholdInSeconds;
 
   console.log('Traffic Delay calculated', trafficDelayInSeconds);
@@ -66,7 +70,7 @@ export async function delayNotification(
   }
 
   const { message } = await handleMessageGeneration(trafficDelayInSeconds, originAddress, destinationAddress);
-  const { messageId } = await sendEmail(recipientEmail, message, destinationAddress);
+  const { messageId } = await handleSendEmail(recipientEmail, message, destinationAddress);
 
   console.log('Email send', messageId);
   
@@ -104,5 +108,58 @@ export async function handleMessageGeneration(
 
   console.log('Email body', message);
   return {message};
+}
 
+export async function handleGetDelay(
+  originAddress: string,
+  destinationAddress: string,
+  options: { waypoints?: string[]; departureTimeISO?: string },
+): Promise<{ trafficDelayInSeconds: number }> {
+  let trafficDelayInSeconds: number | undefined;
+  let manualOverride = false;
+
+  setHandler(manualDelayOverrideSignal, (delay) => {
+    trafficDelayInSeconds = delay;
+    manualOverride = true;
+  });
+
+  try {
+    const result = await getDelay(originAddress, destinationAddress, options);
+    trafficDelayInSeconds = result.trafficDelayInSeconds;
+  } catch (error) {
+    console.error('Failed to get delay automatically', error);
+    await condition(() => manualOverride, '24 hours');
+  }
+
+  if (trafficDelayInSeconds === undefined) {
+    throw new Error('Failed to get traffic delay, and no manual override was provided.');
+  }
+
+  return { trafficDelayInSeconds };
+}
+
+export async function handleSendEmail(
+  recipientEmail: string,
+  message: string,
+  destinationAddress: string,
+): Promise<{ messageId: string | undefined }> {
+  let messageId: string | undefined;
+  let manualConfirmation = false;
+
+  setHandler(manualConfirmationSignal, () => {
+    manualConfirmation = true;
+  });
+
+  try {
+    const result = await sendEmail(recipientEmail, message, destinationAddress);
+    messageId = result.messageId;
+  } catch (error) {
+    log.error('Failed to send email automatically', { error });
+    await condition(() => manualConfirmation, '24 hours');
+    if (manualConfirmation) {
+      messageId = `manual-${uuid4()}`;
+    }
+  }
+
+  return { messageId };
 }

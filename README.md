@@ -28,17 +28,24 @@ sequenceDiagram
     participant GetDelayActivity
     participant GetMessageActivity
     participant SendEmailActivity
+    participant User
 
     Client->>Workflow: Start FreightDelayWorkflow
     Workflow->>GetDelayActivity: Call getDelay()
+    alt Failed to get delay
+        User->>Workflow: manualDelayOverride
+    end
     GetDelayActivity-->>Workflow: Returns delay information
     Workflow->>GetMessageActivity: Call getMessage(delayInfo)
     GetMessageActivity-->>Workflow: Returns notification message
     Workflow->>SendEmailActivity: Call sendEmail(message)
+    alt Failed to send email
+        User->>Workflow: manualConfirmation
+    end
     SendEmailActivity-->>Workflow: Email sent confirmation
     Workflow-->>Client: Workflow completed
 ```
-> Failures from Open AI API is handled gracefully.
+> Failures from Open AI API, Google Maps API and Resend API is handled gracefully.
 
 ## License
 
