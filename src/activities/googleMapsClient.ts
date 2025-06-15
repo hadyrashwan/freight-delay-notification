@@ -1,5 +1,4 @@
-import { createApplicationFailure } from "./errors";
-import { ERRORS } from "./types";
+import { ActivityDependencies } from '../lib/utils';
 
 const TRAFFIC_API_URL = 'https://routes.googleapis.com/directions/v2:computeRoutes';
 type GoogleRoutesResponse = {
@@ -18,9 +17,11 @@ export interface GoogleMapsClient {
 
 export class GoogleMapsClientImpl implements GoogleMapsClient {
   private readonly apiKey: string;
+  private readonly deps: ActivityDependencies;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, deps: ActivityDependencies = new ActivityDependencies()) {
     this.apiKey = apiKey;
+    this.deps = deps;
   }
 
   async getTrafficDelay(originAddress: string, destinationAddress: string, options?: {
@@ -54,18 +55,22 @@ export class GoogleMapsClientImpl implements GoogleMapsClient {
       body: JSON.stringify(body),
     });
 
-    const responseBody = await httpResponse.json() as GoogleRoutesResponse;
-    console.log('Traffic API response', responseBody);
+    const responseBody = (await httpResponse.json()) as GoogleRoutesResponse;
+    this.deps.logger.log('Traffic API response', { responseBody });
 
     if (!httpResponse.ok) {
-      throw createApplicationFailure('Request to traffic api failed', 'API_FAILED', [responseBody, { status: httpResponse.status }]);
+      throw this.deps.applicationError.create('Request to traffic api failed', 'API_FAILED', true);
     }
 
     const route = responseBody.routes[0];
     const durationWithTrafficSec = parseInt(route.duration.slice(0, -1), 10);
     const staticDurationSec = parseInt(route.staticDuration.slice(0, -1), 10);
-    const trafficDelayInSeconds = Math.round((durationWithTrafficSec - staticDurationSec));
-    console.log({ durationWithTrafficSec, staticDurationSec, trafficDelayInSeconds });
+    const trafficDelayInSeconds = Math.round(durationWithTrafficSec - staticDurationSec);
+    this.deps.logger.log('Traffic delay calculated', {
+      durationWithTrafficSec,
+      staticDurationSec,
+      trafficDelayInSeconds,
+    });
 
     return trafficDelayInSeconds;
   }

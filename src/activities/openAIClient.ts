@@ -1,5 +1,5 @@
-import { createApplicationFailure } from "./errors";
-import { ERRORS, OpenAiApiResponse } from "./types";
+import { ActivityDependencies } from '../lib/utils';
+import { OpenAiApiResponse } from './types';
 
 const LLM_API_URL = 'https://api.openai.com/v1/chat/completions';
 
@@ -9,9 +9,11 @@ export interface OpenAIClient {
 
 export class OpenAIClientImpl implements OpenAIClient {
   private readonly apiKey: string;
+  private readonly deps: ActivityDependencies;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, deps: ActivityDependencies = new ActivityDependencies()) {
     this.apiKey = apiKey;
+    this.deps = deps;
   }
 
   async getMessage(delayInSeconds: number, originAddress: string, destinationAddress: string): Promise<string> {
@@ -42,12 +44,14 @@ export class OpenAIClientImpl implements OpenAIClient {
       body: JSON.stringify(requestBody)
     });
 
-    const data = await response.json() as OpenAiApiResponse;
+    const data = (await response.json()) as OpenAiApiResponse;
     if (!response.ok) {
-      throw createApplicationFailure('Request to the LLM API failed', 'API_FAILED', [data]);
+      this.deps.logger.error('Request to the LLM API failed', { data });
+      throw this.deps.applicationError.create('Request to the LLM API failed', 'API_FAILED', true);
     }
 
     const generatedMessage = data.choices[0].message.content.trim();
+    this.deps.logger.log('Message generated successfully', { generatedMessage });
     return generatedMessage;
   }
 }
